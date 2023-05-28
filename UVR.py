@@ -48,13 +48,16 @@ from kthread import KThread
 from lib_v5 import spec_utils
 from pathlib  import Path
 from separate import SeperateDemucs, SeperateMDX, SeperateVR, save_format
-from playsound import playsound
+# from playsound import playsound
 from tkinter import *
 from tkinter.tix import *
 import re
 from typing import List
 import sys
 import ssl
+
+from pytube import YouTube
+from pytube.streams import Stream
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 logging.info('UVR BEGIN')
@@ -1045,12 +1048,55 @@ class MainWindow(TkinterDnD.Tk if is_dnd_compatible else tk.Tk):
                 is_running = True
                 
         return is_running
+    def download_then_run(self):
+        # download using the link from the download box
+        youtube_link = self.magic_text.get()
+        audio_stream: Stream = YouTube(youtube_link).streams.filter(only_audio=True, file_extension="webm" ).order_by("bitrate").first()
+        safe_filename = audio_stream.default_filename
+        audio_stream.download() # place in working directory.
+        # create the output folder
+        folder_name, ext = os.path.splitext(safe_filename)
+        full_folder = f"./output/{folder_name}"
+        os.makedirs(full_folder, exist_ok=True)
+
+        # Convert the input to an mp3
+        downloaded_mp3 = os.path.realpath(f"./{folder_name}.mp3")
+        subprocess.run([
+            'ffmpeg',
+            '-i', os.path.realpath(safe_filename),
+            downloaded_mp3
+        ])
+
+        # Hack the variables
+        self.inputPaths = [downloaded_mp3]
+        self.process_input_selections()
+        self.update_inputPaths()
+        self.export_path_var.set(full_folder)
+
+
+        # hit process button
+        self.process_initialize()
+        # Delete the downloaded webm/mp4
+        os.remove(safe_filename)
+        # os.remove(downloaded_mp3)
+        # pop open output folder
+        os.startfile(os.path.realpath(f"./output/{folder_name}"))
 
     # -Widget Methods--
 
     def fill_main_frame(self):
         """Creates root window widgets"""
+        # hack for the text box and dominic button
+        self.magic_text = tk.StringVar(value="Put a youtube link here")
+        self.magic_textbox = tk.Entry(textvariable=self.magic_text)
+        self.magic_button = ttk.Button(master=self, text="Magic", command=self.download_then_run)
+
+        self.magic_textbox.place(x=50, y=220, width=-50, height=35,
+                                    relx=0, rely=0, relwidth=0.5, relheight=0)
+        self.magic_button.place(x=400, y=225, width=-30, height=35,
+                                    relx=0, rely=0, relwidth=0.5, relheight=0)
         
+
         self.title_Label = tk.Label(master=self, image=self.logo_img, compound=tk.TOP)
         self.title_Label.place(x=-2, y=banner_placement)
 
