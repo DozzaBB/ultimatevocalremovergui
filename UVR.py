@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # GUI modules
 import audioread
 import base64
@@ -56,8 +57,6 @@ from typing import List
 import sys
 import ssl
 
-from pytube import YouTube
-from pytube.streams import Stream
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 logging.info('UVR BEGIN')
@@ -1050,22 +1049,49 @@ class MainWindow(TkinterDnD.Tk if is_dnd_compatible else tk.Tk):
         return is_running
     def download_then_run(self):
         # download using the link from the download box
-        youtube_link = self.magic_text.get()
-        audio_stream: Stream = YouTube(youtube_link).streams.filter(only_audio=True, file_extension="webm" ).order_by("bitrate").first()
-        safe_filename = audio_stream.default_filename
-        audio_stream.download() # place in working directory.
+
+        ## Youtube Downloader pytube version.
+        
+        # from pytube import YouTube
+        # from pytube.streams import Stream
+        # youtube_link = self.magic_text.get()
+        # audio_stream: Stream = YouTube(youtube_link).streams.filter(only_audio=True, file_extension="webm" ).order_by("bitrate").first()
+        # safe_filename = audio_stream.default_filename
+        # self.conversion_Button_Text_var.set('Downloading video')
+        # audio_stream.download() # place in working directory.
         # create the output folder
+
+        ## yt_dlp version.
+        youtube_link = self.magic_text.get()
+        import yt_dlp
+        self.save_format_var = tkinter.StringVar(None, value=MP3)
+
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            "outtmpl": "%(title)s.%(ext)s"
+        }
+        ydl = yt_dlp.YoutubeDL(ydl_opts)
+        ydl.get_output_path(youtube_link)
+        self.conversion_Button_Text_var.set('Downloading video')
+        ydl.download([youtube_link])
+        safe_filename = [x for x in os.listdir() if str(x).endswith(".webm")][0]
+        ## end yt_dlp.
+        
+        
+
         folder_name, ext = os.path.splitext(safe_filename)
         full_folder = f"./output/{folder_name}"
         os.makedirs(full_folder, exist_ok=True)
 
         # Convert the input to an mp3
         downloaded_mp3 = os.path.realpath(f"./{folder_name}.mp3")
+        self.conversion_Button_Text_var.set('Running FFMPEG')
         subprocess.run([
             'ffmpeg',
             '-i', os.path.realpath(safe_filename),
             downloaded_mp3
         ])
+        self.conversion_Button_Text_var.set('Start running model')
 
         # Hack the variables
         self.inputPaths = [downloaded_mp3]
@@ -1077,10 +1103,12 @@ class MainWindow(TkinterDnD.Tk if is_dnd_compatible else tk.Tk):
         # hit process button
         self.process_initialize()
         # Delete the downloaded webm/mp4
-        os.remove(safe_filename)
+        # print("deleting!")
+        # print(f"deleted {safe_filename}")
         # os.remove(downloaded_mp3)
         # pop open output folder
         os.startfile(os.path.realpath(f"./output/{folder_name}"))
+        os.remove(safe_filename)
 
     # -Widget Methods--
 
