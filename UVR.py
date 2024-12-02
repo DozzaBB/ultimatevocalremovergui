@@ -1086,11 +1086,15 @@ class MainWindow(TkinterDnD.Tk if is_dnd_compatible else tk.Tk):
         # Convert the input to an mp3
         downloaded_mp3 = os.path.realpath(f"./{folder_name}.mp3")
         self.conversion_Button_Text_var.set('Running FFMPEG')
-        subprocess.run([
-            'ffmpeg',
-            '-i', os.path.realpath(safe_filename),
-            downloaded_mp3
-        ])
+        try:
+            subprocess.run([
+                'ffmpeg',
+                '-i', os.path.realpath(safe_filename),
+                downloaded_mp3
+            ])
+        except:
+            print("put ffmpeg next to this")
+            raise FileNotFoundError("Missing ffmpeg")
         self.conversion_Button_Text_var.set('Start running model')
 
         # Hack the variables
