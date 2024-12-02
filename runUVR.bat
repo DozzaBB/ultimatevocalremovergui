@@ -1,3 +1,3 @@
-call ./venv/scripts/activate.bat
+call venv/scripts/activate.bat
 python UVR.py
 pause
