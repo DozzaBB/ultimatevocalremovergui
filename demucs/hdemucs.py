@@ -689,7 +689,7 @@ class HDemucs(nn.Module):
         length = x.shape[-1]
 
         z = self._spec(mix)
-        mag = self._magnitude(z)
+        mag = self._magnitude(z).to(mix.device)
         x = mag
 
         B, C, Fq, T = x.shape
@@ -769,14 +769,28 @@ class HDemucs(nn.Module):
         S = len(self.sources)
         x = x.view(B, S, -1, Fq, T)
         x = x * std[:, None] + mean[:, None]
+        
+        # to cpu as non-cuda GPUs don't support complex numbers
+        # demucs issue #435 ##432
+        # NOTE: in this case z already is on cpu
+        # TODO: remove this when mps supports complex numbers
+        
+        device_type = x.device.type
+        device_load = f"{device_type}:{x.device.index}" if not device_type == 'mps' else device_type
+        x_is_other_gpu = not device_type in ["cuda", "cpu"]
+        
+        if x_is_other_gpu:
+            x = x.cpu()
 
         zout = self._mask(z, x)
         x = self._ispec(zout, length)
+
+        # back to other device
+        if x_is_other_gpu:
+            x = x.to(device_load)
 
         if self.hybrid:
             xt = xt.view(B, S, -1, length)
             xt = xt * stdt[:, None] + meant[:, None]
             x = xt + x
         return x
-
-

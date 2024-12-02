@@ -8,6 +8,9 @@ proc set_theme {mode} {
 	if {$mode == "dark"} {
 		ttk::style theme use "sun-valley-dark"
 
+        set fontString "$::fontName"
+        set fgSet "$::fgcolorset"
+
 		array set colors {
 		    -fg             "#F6F6F7"
 		    -bg             "#0e0e0f"
@@ -18,7 +21,7 @@ proc set_theme {mode} {
         
         ttk::style configure . \
             -background $colors(-bg) \
-            -foreground $colors(-fg) \
+            -foreground $fgSet \
             -troughcolor $colors(-bg) \
             -focuscolor $colors(-selectbg) \
             -selectbackground $colors(-selectbg) \
@@ -26,7 +29,7 @@ proc set_theme {mode} {
             -insertwidth 0 \
             -insertcolor $colors(-fg) \
             -fieldbackground $colors(-selectbg) \
-            -font {"Century Gothic" 10} \
+            -font $fontString \
             -borderwidth 0 \
             -relief flat
 

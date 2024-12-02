@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -11,6 +11,12 @@ import torch as th
 def spectro(x, n_fft=512, hop_length=None, pad=0):
     *other, length = x.shape
     x = x.reshape(-1, length)
+    
+    device_type = x.device.type
+    is_other_gpu = not device_type in ["cuda", "cpu"]
+
+    if is_other_gpu:
+        x = x.cpu()
     z = th.stft(x,
                 n_fft * (1 + pad),
                 hop_length or n_fft // 4,
@@ -29,6 +35,12 @@ def ispectro(z, hop_length=None, length=None, pad=0):
     n_fft = 2 * freqs - 2
     z = z.view(-1, freqs, frames)
     win_length = n_fft // (1 + pad)
+    
+    device_type = z.device.type
+    is_other_gpu = not device_type in ["cuda", "cpu"]
+    
+    if is_other_gpu:
+        z = z.cpu()
     x = th.istft(z,
                  n_fft,
                  hop_length,

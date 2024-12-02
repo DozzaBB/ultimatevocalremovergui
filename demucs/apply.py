@@ -121,7 +121,18 @@ def tensor_chunk(tensor_or_chunk):
         assert isinstance(tensor_or_chunk, th.Tensor)
         return TensorChunk(tensor_or_chunk)
 
-def apply_model(model, mix, shifts=1, split=True, overlap=0.25, transition_power=1., static_shifts=1, set_progress_bar=None, device=None, progress=False, num_workers=0, pool=None): 
+def apply_model(model, 
+                mix, 
+                shifts=1, 
+                split=True, 
+                overlap=0.25, 
+                transition_power=1., 
+                static_shifts=1, 
+                set_progress_bar=None, 
+                device=None, 
+                progress=False, 
+                num_workers=0, 
+                pool=None): 
     """
     Apply model to a given mixture.
 
