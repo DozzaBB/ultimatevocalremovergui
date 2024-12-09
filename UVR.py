@@ -1646,7 +1646,7 @@ class MainWindow(TkinterDnD.Tk if is_dnd_compatible else tk.Tk):
         ## yt_dlp version.
         youtube_link = self.magic_text.get()
         import yt_dlp
-        self.save_format_var = tkinter.StringVar(None, value=MP3)
+        self.save_format_var = tk.StringVar(None, value=MP3)
 
         ydl_opts = {
             'format': 'bestaudio/best',
